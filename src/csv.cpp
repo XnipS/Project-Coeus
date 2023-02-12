@@ -1,16 +1,6 @@
 #include "../include/csv.h"
 
-#include <stdio.h>
-
-#include <cstddef>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-
-#include "../include/core.h"
-#include "../include/neuron.h"
+#include <cmath>
 using namespace std;
 TrainingImage LoadImageFromFile(int id) {
   ifstream inFile("../data/mnist_train.csv");
@@ -34,6 +24,7 @@ TrainingImage LoadImageFromFile(int id) {
     seglist.push_back(segment);
   }
   // cout << seglist.size() << endl;
+  vector<int> rawData;
   vector<vector<int>> imageOutput(MaterialSize, vector<int>(MaterialSize));
   int imageOutputTarget = -1;
   int segX = 0;
@@ -43,6 +34,7 @@ TrainingImage LoadImageFromFile(int id) {
     if (x == 0) {
       imageOutputTarget = stoi(seglist[x]);
     } else {
+      rawData.push_back(stoi(seglist[x]));
       if (segX > MaterialSize - 1) {
         segY++;
         segX = 0;
@@ -57,5 +49,22 @@ TrainingImage LoadImageFromFile(int id) {
   TrainingImage output;
   output.image = imageOutput;
   output.target = imageOutputTarget;
+  output.rawData = rawData;
   return output;
 };
+
+void PrintNeuronLayer(TrainingImage x) {
+  // Print testimage
+  for (int i = 0; i < MaterialSize - 1; i++) {
+    for (int y = 0; y < MaterialSize - 1; y++) {
+      std::string out = "\u25A1";
+      if (x.image[i][y] > 0) {
+        out = "\u25A0";
+      }
+      std::cout << out;  // imageOutput[i][y];  // out;
+    }
+    std::cout << std::endl;
+  }
+  // Print target
+  std::cout << "Target: " << x.target << std::endl;
+}

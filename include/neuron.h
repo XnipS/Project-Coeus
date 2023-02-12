@@ -3,9 +3,9 @@
 #include <vector>
 struct Connection;
 struct Neuron {
-  float activation = 0;
+  double activation = 0;
   float bias = 1;
-  Connection *connections[];
+  std::vector<Connection> connections;
 };
 struct Connection {
   float weight;
@@ -13,5 +13,6 @@ struct Connection {
 };
 struct TrainingImage {
   int target;
+  std::vector<int> rawData;
   std::vector<std::vector<int>> image;
 };
