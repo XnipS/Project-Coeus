@@ -2,7 +2,6 @@
 
 #include <math.h>
 
-#include <Eigen/Dense>
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -13,7 +12,6 @@
 #include "../include/core.h"
 #include "../include/csv.h"
 #include "../include/neuron.h"
-#include "Eigen/src/Core/Matrix.h"
 
 std::vector<Neuron> inputLayer(784);
 std::vector<Neuron> layer1(16);
@@ -52,28 +50,28 @@ void ConnectNeuronToLayer(Neuron* input, std::vector<Neuron> layer) {
 void GenerateNeurons(TrainingImage input) {
   for (int a = 0; a < inputLayer.size(); a++) {
     inputLayer[a].activation =
-        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX));
+        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX)) - 0.5;
     ;  //(1.0 / 255.0) * input.rawData[a];
     inputLayer[a].bias =
-        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX));
+        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX)) - 0.5;
   }
   for (int a = 0; a < layer1.size(); a++) {
     layer1[a].activation =
-        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX));
+        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX)) - 0.5;
     layer1[a].bias =
-        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX));
+        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX)) - 0.5;
   }
   for (int a = 0; a < layer2.size(); a++) {
     layer2[a].activation =
-        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX));
+        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX)) - 0.5;
     layer2[a].bias =
-        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX));
+        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX)) - 0.5;
   }
   for (int a = 0; a < outputLayer.size(); a++) {
     outputLayer[a].activation =
-        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX));
+        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX)) - 0.5;
     outputLayer[a].bias =
-        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX));
+        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX)) - 0.5;
   }
 }
 
@@ -121,8 +119,8 @@ void BackPropogate(int target) {
   // Output layer
   for (int n = 0; n < outputLayer.size(); n++) {
     int y = 0;
-    if (n == y) {
-      n = 1;
+    if (n == target) {
+      y = 1;
     }
     for (int x = 0; x < outputLayer[n].connections.size(); x++) {
       // Get deltaWeight
@@ -131,7 +129,7 @@ void BackPropogate(int target) {
           DyDxSigmoid(outputLayer[n].connections[x].weight *
                           outputLayer[n].connections[x].connectedTo.activation +
                       outputLayer[n].bias);
-      delta *= 2 * (outputLayer[n].activation - n);
+      delta *= 2 * (outputLayer[n].activation - y);
       // Set deltaWeight
       outputLayer[n].connections[x].weight += delta;
 
@@ -141,7 +139,7 @@ void BackPropogate(int target) {
           DyDxSigmoid(outputLayer[n].connections[x].weight *
                           outputLayer[n].connections[x].connectedTo.activation +
                       outputLayer[n].bias);
-      bias *= 2 * (outputLayer[n].activation - n);
+      bias *= 2 * (outputLayer[n].activation - y);
       // Set deltaBias
       outputLayer[n].bias += bias;
 
@@ -151,7 +149,7 @@ void BackPropogate(int target) {
           DyDxSigmoid(outputLayer[n].connections[x].weight *
                           outputLayer[n].connections[x].connectedTo.activation +
                       outputLayer[n].bias);
-      act *= 2 * (outputLayer[n].activation - n);
+      act *= 2 * (outputLayer[n].activation - y);
       // Set deltaActivation
       outputLayer[n].connections[x].connectedTo.activation += act;
     }
@@ -166,7 +164,7 @@ void BackPropogate(int target) {
       delta *= DyDxSigmoid(layer2[n].connections[x].weight *
                                layer2[n].connections[x].connectedTo.activation +
                            layer2[n].bias);
-      delta *= 2 * (layer2[n].activation - n);
+      delta *= 2 * (layer2[n].activation - y);
       // Set deltaWeight
       layer2[n].connections[x].weight += delta;
 
@@ -175,7 +173,7 @@ void BackPropogate(int target) {
       bias *= DyDxSigmoid(layer2[n].connections[x].weight *
                               layer2[n].connections[x].connectedTo.activation +
                           layer2[n].bias);
-      bias *= 2 * (layer2[n].activation - n);
+      bias *= 2 * (layer2[n].activation - y);
       // Set deltaBias
       layer2[n].bias += bias;
 
@@ -184,7 +182,7 @@ void BackPropogate(int target) {
       act *= DyDxSigmoid(layer2[n].connections[x].weight *
                              layer2[n].connections[x].connectedTo.activation +
                          layer2[n].bias);
-      act *= 2 * (layer2[n].activation - n);
+      act *= 2 * (layer2[n].activation - y);
       // Set deltaActivation
       layer2[n].connections[x].connectedTo.activation += act;
     }
@@ -200,7 +198,7 @@ void BackPropogate(int target) {
       delta *= DyDxSigmoid(layer1[n].connections[x].weight *
                                layer1[n].connections[x].connectedTo.activation +
                            layer1[n].bias);
-      delta *= 2 * (layer1[n].activation - n);
+      delta *= 2 * (layer1[n].activation - y);
       // Set deltaWeight
       layer1[n].connections[x].weight += delta;
 
@@ -209,7 +207,7 @@ void BackPropogate(int target) {
       bias *= DyDxSigmoid(layer1[n].connections[x].weight *
                               layer1[n].connections[x].connectedTo.activation +
                           layer1[n].bias);
-      bias *= 2 * (layer1[n].activation - n);
+      bias *= 2 * (layer1[n].activation - y);
       // Set deltaBias
       layer1[n].bias += bias;
 
@@ -218,7 +216,7 @@ void BackPropogate(int target) {
       act *= DyDxSigmoid(layer1[n].connections[x].weight *
                              layer1[n].connections[x].connectedTo.activation +
                          layer1[n].bias);
-      act *= 2 * (layer1[n].activation - n);
+      act *= 2 * (layer1[n].activation - y);
       // Set deltaActivation
       layer1[n].connections[x].connectedTo.activation += act;
     }
