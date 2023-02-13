@@ -3,7 +3,7 @@
 #include <cmath>
 using namespace std;
 TrainingImage LoadImageFromFile(int id) {
-  ifstream inFile("../data/mnist_train.csv");
+  ifstream inFile(TrainingMaterialLocation);
   string line;
   int currentLine = -1;
   string foundLine;

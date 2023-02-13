@@ -1,5 +1,6 @@
 #include "../include/coeus.h"
 
+#include <asm-generic/errno.h>
 #include <math.h>
 
 #include <algorithm>
@@ -8,6 +9,7 @@
 #include <ctime>
 #include <iostream>
 #include <ostream>
+#include <string>
 
 #include "../include/core.h"
 #include "../include/csv.h"
@@ -47,7 +49,7 @@ void ConnectNeuronToLayer(Neuron* input, std::vector<Neuron> layer) {
     input->connections.push_back(con);
   }
 }
-void GenerateNeurons(TrainingImage input) {
+void GenerateNeurons() {
   for (int a = 0; a < inputLayer.size(); a++) {
     inputLayer[a].activation =
         static_cast<float>(rand()) / (static_cast<float>(RAND_MAX)) - 0.5;
@@ -114,7 +116,7 @@ void FireNeurons() {
     outputLayer[a].activation = CalculateNeuronActivation(&outputLayer[a]);
   }
 }
-
+#define alpha 1.0
 void BackPropogate(int target) {
   // Output layer
   for (int n = 0; n < outputLayer.size(); n++) {
@@ -131,7 +133,7 @@ void BackPropogate(int target) {
                       outputLayer[n].bias);
       delta *= 2 * (outputLayer[n].activation - y);
       // Set deltaWeight
-      outputLayer[n].connections[x].weight += delta;
+      outputLayer[n].connections[x].weight -= delta * alpha;
 
       // Get deltaBias
       float bias = 1;
@@ -141,7 +143,7 @@ void BackPropogate(int target) {
                       outputLayer[n].bias);
       bias *= 2 * (outputLayer[n].activation - y);
       // Set deltaBias
-      outputLayer[n].bias += bias;
+      outputLayer[n].bias -= bias * alpha;
 
       // Get deltaActivation
       float act = outputLayer[n].connections[x].weight;
@@ -151,7 +153,7 @@ void BackPropogate(int target) {
                       outputLayer[n].bias);
       act *= 2 * (outputLayer[n].activation - y);
       // Set deltaActivation
-      outputLayer[n].connections[x].connectedTo.activation += act;
+      outputLayer[n].connections[x].connectedTo.activation -= act * alpha;
     }
   }
   // Layer2
@@ -166,7 +168,7 @@ void BackPropogate(int target) {
                            layer2[n].bias);
       delta *= 2 * (layer2[n].activation - y);
       // Set deltaWeight
-      layer2[n].connections[x].weight += delta;
+      layer2[n].connections[x].weight -= delta * alpha;
 
       // Get deltaBias
       float bias = 1;
@@ -175,7 +177,7 @@ void BackPropogate(int target) {
                           layer2[n].bias);
       bias *= 2 * (layer2[n].activation - y);
       // Set deltaBias
-      layer2[n].bias += bias;
+      layer2[n].bias -= bias * alpha;
 
       // Get deltaActivation
       float act = layer2[n].connections[x].weight;
@@ -184,7 +186,7 @@ void BackPropogate(int target) {
                          layer2[n].bias);
       act *= 2 * (layer2[n].activation - y);
       // Set deltaActivation
-      layer2[n].connections[x].connectedTo.activation += act;
+      layer2[n].connections[x].connectedTo.activation -= act * alpha;
     }
   }
 
@@ -200,7 +202,7 @@ void BackPropogate(int target) {
                            layer1[n].bias);
       delta *= 2 * (layer1[n].activation - y);
       // Set deltaWeight
-      layer1[n].connections[x].weight += delta;
+      layer1[n].connections[x].weight -= delta * alpha;
 
       // Get deltaBias
       float bias = 1;
@@ -209,7 +211,7 @@ void BackPropogate(int target) {
                           layer1[n].bias);
       bias *= 2 * (layer1[n].activation - y);
       // Set deltaBias
-      layer1[n].bias += bias;
+      layer1[n].bias -= bias * alpha;
 
       // Get deltaActivation
       float act = layer1[n].connections[x].weight;
@@ -218,34 +220,77 @@ void BackPropogate(int target) {
                          layer1[n].bias);
       act *= 2 * (layer1[n].activation - y);
       // Set deltaActivation
-      layer1[n].connections[x].connectedTo.activation += act;
+      layer1[n].connections[x].connectedTo.activation -= act * alpha;
     }
   }
+}
+
+void ReadNewData(TrainingImage input) {
+  for (int a = 0; a < inputLayer.size(); a++) {
+    inputLayer[a].activation = (1.0 / 255.0) * input.rawData[a];
+  }
+}
+
+int BestGuess() {
+  float max = 0.0;
+  int guess = 0.0;
+  for (int a = 0; a < outputLayer.size(); a++) {
+    if (outputLayer[a].activation > max) {
+      max = outputLayer[a].activation;
+      guess = a;
+    }
+  }
+  return guess;
 }
 
 int Entry(int argc, char* args[]) {
   // Initialise random number gen
   srand(static_cast<unsigned>(time(0)));
-  // Get training image
-  TrainingImage x = LoadImageFromFile(8);
-  PrintNeuronLayer(x);
-  GenerateNeurons(x);
+  // Setup neurons
+  GenerateNeurons();
   ConnectNeurons();
 
-  FireNeurons();
-  BackPropogate(x.target);
-  std::cout << "Cost Before: " << CalculateCost(x.target) << std::endl;
-
-  for (int i = 0; i < 10; i++) {
-    FireNeurons();
-    BackPropogate(x.target);
-    std::cout << "Cost After [" << i << "]: " << CalculateCost(x.target)
-              << std::endl;
+  // Training
+  for (int x = 0; x < 100; x++) {
+    std::cout << NIP_BigLine << std::endl;
+    int correct = 0;
+    for (int i = 0; i < 100; i++) {
+      // Load input
+      TrainingImage x = LoadImageFromFile(i + 1);
+      ReadNewData(x);
+      // PrintNeuronLayer(x);
+      //  Fire neurons
+      FireNeurons();
+      // std::cout << "Cost Before: " << CalculateCost(x.target) << std::endl;
+      //  Backprop
+      BackPropogate(x.target);
+      std::cout << "Cost: " << CalculateCost(x.target)
+                << " Guess: " << BestGuess() << " Real: " << x.target;
+      if (x.target == BestGuess()) {
+        std::cout << " TRUE";
+        correct++;
+      } else {
+        std::cout << " FALSE";
+      }
+      std::cout << " Error: "
+                << ((1.0 - (double)correct / (double)(i + 1)) * 100) << "%"
+                << std::endl;
+    }
   }
-  std::cout << "Connection Count: " << layer1[0].connections.size()
-            << std::endl;
-  std::cout << "Connection activation Test: "
-            << layer1[0].connections[12].connectedTo.activation << std::endl;
+
+  // Backprop test
+  // for (int i = 0; i < 10; i++) {
+  //   FireNeurons();
+  //   BackPropogate(x.target);
+  //   std::cout << "Cost After [" << i + 1 << "]: " << CalculateCost(x.target)
+  //             << std::endl;
+  // }
+
+  // Connection test
+  // std::cout << "Connection Count: " << layer1[0].connections.size()
+  //           << std::endl;
+  // std::cout << "Connection activation Test: "
+  //           << layer1[0].connections[12].connectedTo.activation << std::endl;
   std::cout << "Done!" << std::endl;
   return 0;
 };
