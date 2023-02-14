@@ -251,12 +251,12 @@ int Entry(int argc, char* args[]) {
   ConnectNeurons();
 
   // Training
-  for (int x = 0; x < 100; x++) {
+  for (int x = 0; x < 1; x++) {
     std::cout << NIP_BigLine << std::endl;
     int correct = 0;
     for (int i = 0; i < 100; i++) {
       // Load input
-      TrainingImage x = LoadImageFromFile(i + 1);
+      TrainingImage x = LoadImageFromFile(1);
       ReadNewData(x);
       // PrintNeuronLayer(x);
       //  Fire neurons
