@@ -1,20 +1,5 @@
 #include "../include/coeus.h"
 
-#include <asm-generic/errno.h>
-#include <math.h>
-
-#include <algorithm>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <ostream>
-#include <string>
-
-#include "../include/core.h"
-#include "../include/csv.h"
-#include "../include/neuron.h"
-
 std::vector<Neuron> inputLayer(784);
 std::vector<Neuron> layer1(16);
 std::vector<Neuron> layer2(16);
@@ -33,9 +18,9 @@ double CalculateCost(int target) {
   double output = 0;
   for (int i = 0; i < outputLayer.size(); i++) {
     if (i == target) {
-      output += std::sqrt(abs(outputLayer[i].activation - 1.0));
+      output += std::sqrt(std::abs(outputLayer[i].activation - 1.0));
     } else {
-      output += std::sqrt(abs(outputLayer[i].activation));
+      output += std::sqrt(std::abs(outputLayer[i].activation));
     }
   }
   return output;
@@ -250,20 +235,26 @@ int Entry(int argc, char* args[]) {
   GenerateNeurons();
   ConnectNeurons();
 
+  // generateBitmapImage(unsigned char *image, int height, int width,
+  // "output.bmp")
+
   // Training
-  for (int x = 0; x < 1; x++) {
+  for (int i = 0; i < 10; i++) {
     std::cout << NIP_BigLine << std::endl;
     int correct = 0;
-    for (int i = 0; i < 100; i++) {
-      // Load input
-      TrainingImage x = LoadImageFromFile(1);
-      ReadNewData(x);
-      // PrintNeuronLayer(x);
+    int total = 0;
+    // Load input
+    TrainingImage x = LoadImageFromFile(i + 1);
+    ReadNewData(x);
+    double error = 100.0;
+    while (error > 5) {  // Percent
+      total++;
       //  Fire neurons
       FireNeurons();
-      // std::cout << "Cost Before: " << CalculateCost(x.target) << std::endl;
       //  Backprop
       BackPropogate(x.target);
+      error = ((1.0 - (double)correct / (double)(total + 1)) * 100);
+
       std::cout << "Cost: " << CalculateCost(x.target)
                 << " Guess: " << BestGuess() << " Real: " << x.target;
       if (x.target == BestGuess()) {
@@ -272,9 +263,7 @@ int Entry(int argc, char* args[]) {
       } else {
         std::cout << " FALSE";
       }
-      std::cout << " Error: "
-                << ((1.0 - (double)correct / (double)(i + 1)) * 100) << "%"
-                << std::endl;
+      std::cout << " Error: " << error << "%" << std::endl;
     }
   }
 

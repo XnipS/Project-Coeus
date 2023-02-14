@@ -1,6 +1,5 @@
 #include "../include/csv.h"
 
-#include <cmath>
 using namespace std;
 TrainingImage LoadImageFromFile(int id) {
   ifstream inFile(TrainingMaterialLocation);
