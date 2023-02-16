@@ -18,7 +18,7 @@ add_library(Coeus SHARED
 	src/coeus.cpp
 )
 
-target_include_directories(Coeus PUBLIC dependencies/eigen)
+#target_include_directories(Coeus PUBLIC dependencies/eigen)
 
 add_executable(Coeus-App src/main.cpp)
 #target_link_libraries(Coeus csv)

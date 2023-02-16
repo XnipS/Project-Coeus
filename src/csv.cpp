@@ -1,8 +1,11 @@
 #include "../include/csv.h"
 
+#include <string>
+
 using namespace std;
 TrainingImage LoadImageFromFile(int id) {
-  ifstream inFile(TrainingMaterialLocation);
+  ifstream inFile;
+  inFile.open((std::string) "../data/mnist_train.csv");
   string line;
   int currentLine = -1;
   string foundLine;
